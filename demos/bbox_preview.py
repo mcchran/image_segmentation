@@ -10,9 +10,8 @@ import math
 
 def load_model():
 	model = Model()
-	model.load_weights("../weights/lungs_1.hdf5", by_name = True)
+	model.load_weights("../weights/lungs_1.h5", by_name = True)
 	return model
-
 
 def get_mask(img, predictor):
 	grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
