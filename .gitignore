@@ -2,3 +2,6 @@
 *__pycache__/
 data/*
 weights/*
+.vscode
+demos/normal_lungs.png
+demos/src
