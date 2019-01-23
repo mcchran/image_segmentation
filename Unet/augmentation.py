@@ -10,8 +10,6 @@ from glob import glob
 import cv2
 import os
 
-from config import
-
 ia.seed(1)
 def augment(image_list, mask_list):
 

@@ -2,7 +2,7 @@
 
 
 
-**LICENSR MIT:**
+**LICENSE MIT:**
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For full licence please refer to **Unet/LICENSE**
 
@@ -13,6 +13,15 @@
 **Aim:**
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Provide a coherent library enlisting multiple well known Deep Learning architecutres for image Segmentation
+
+**How to use?**
+
+1. To train the model do check update the **Unet/config.py**
+2. Run **Unet/myTrain.py**
+3. Locate the weights under the **weights/** directory
+4. Load the model **Unet/myModels.py**
+5. Load the weights using the standard Keras recipe
+6. Enjoy.
 
 **Progress:**
 

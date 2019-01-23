@@ -16,6 +16,8 @@ from config import IMAGE_PATHS, MASK_PATHS # laod images and masks from a partic
 
 from skimage import exposure
 
+print(IMAGE_PATHS)
+
 @threadsafe_generator
 def Generator(image_paths, mask_paths, shape=(256,256), batch_size = 32):
     batch_size = batch_size if batch_size < len(image_paths) else len(image_paths)
