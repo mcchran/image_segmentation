@@ -4,22 +4,23 @@
 
 import os
 from glob import glob
-import cv2
-import numpy as np
 
+import cv2 #FIXME: this should be removed die to GIL parallelizing problem
+
+import numpy as np
 from threadSafeGen import threadsafe_generator
 from math import floor, ceil
-
 from augmentation import augment
-
-from config import IMAGE_PATHS, MASK_PATHS # laod images and masks from a particular directory
-
+from config import INPUT_EXAMPLE, OUTPUT_EXAMPLE # laod images and masks from a particular directory
 from skimage import exposure
+from utils import generate_paths
 
-print(IMAGE_PATHS)
+
+print(INPUT_EXAMPLE)
 
 @threadsafe_generator
 def Generator(image_paths, mask_paths, shape=(256,256), batch_size = 32):
+    print("The len of image paths is: ", len(image_paths))
     batch_size = batch_size if batch_size < len(image_paths) else len(image_paths)
     idx = 0
     while True:
@@ -50,26 +51,36 @@ def Generator(image_paths, mask_paths, shape=(256,256), batch_size = 32):
         y = list(map(lambda x: np.expand_dims(x,2), y))
         if len(image_paths) < batch_size:
             batch_size = len(image_paths)
-
+        print("This is the id ", idx)
+        print("The batch size is: ", batch_size)
+        print("The len of image_paths is: ", len(image_paths))
         idx = (idx + 1) % (len(image_paths) // batch_size)
         yield np.array(X), np.array(y)
 
-def createGens(image_root_path=IMAGE_PATHS, mask_root_path=MASK_PATHS, shape=(256,256), batch_size = 32, split=0.2):
+def createGens(input_example=INPUT_EXAMPLE, output_example=OUTPUT_EXAMPLE, shape=(256,256), batch_size = 32, split=0.2):
     '''
         Denotes and returns Train and Validation genrators ...
     '''
-    image_paths = glob(os.path.join(image_root_path, "*.png"))
+    input_root, input_suffix, output_root, output_suffix, output_separator = generate_paths(input_example, output_example)
+    
+    print("Input: ", input_root)
+    print("Output root: ", output_root)
+
+    image_paths = glob(os.path.join(input_root, "*" + input_suffix))
     print("-- #Image_paths: ", len(image_paths) )
-    mask_paths = glob(os.path.join(mask_root_path, "*.png"))
+    mask_paths = glob(os.path.join(output_root, "*" + output_suffix))
     print("-- #Mask_paths: ", len(mask_paths))
+    print(image_paths)
+    print(mask_paths)
     # apparently not all images have a corresponding mask so we need the intersection of those
-    image_ids = list(map(lambda x: x.split('/')[-1].split('.')[0], image_paths))
-    mask_ids = list(map(lambda x: x.split('/')[-1].split('_mask')[0], mask_paths))
+    image_ids = list(map(lambda x: x.split('/')[-1].split(input_suffix)[0], image_paths))
+    mask_ids = list(map(lambda x: x.split('/')[-1].split(output_suffix)[0], mask_paths))
 
     intersection = list(set(image_ids) & set(mask_ids))
 
-    image_paths = list(map(lambda x: os.path.join(image_root_path, x + ".png"), intersection))
-    mask_paths = list(map(lambda x: os.path.join(mask_root_path, x + "_mask.png"), intersection))
+    image_paths = list(map(lambda x: os.path.join(input_root, x + input_suffix), intersection))
+    mask_paths = list(map(lambda x: os.path.join(output_root, x + output_suffix), intersection)) # output_suffix is whatever is placed after the id ...  
+    print("This is the intersection", len(intersection))
 
     dataset_len = len(image_paths)
     train_image_paths = image_paths[:floor(dataset_len * (1 - split))]

@@ -3,6 +3,8 @@
     #
 
 from keras.callbacks import EarlyStopping
+from glob import glob
+import os
 
 class meetExpectations(EarlyStopping):
     '''
@@ -36,3 +38,73 @@ class adaptLearningRate(EarlyStopping):
     '''
     #TODO: to be done
     pass
+
+def generate_paths(input_example, output_example):
+
+    def lcs (S, T):
+        '''
+            returns the longest common substring for the given strings s, t
+        '''
+        m = len(S)
+        n = len(T)
+        counter = [[0]*(n+1) for x in range(m+1)]
+        longest = 0
+        lcs_set = set()
+        for i in range(m):
+            for j in range(n):
+                if S[i] == T[j]:
+                    c = counter[i][j] + 1
+                    counter[i+1][j+1] = c
+                    if c > longest:
+                        lcs_set = set()
+                        longest = c
+                        lcs_set.add(S[i-c+1:i+1])
+                    elif c == longest:
+                        lcs_set.add(S[i-c+1:i+1])
+
+        return "".join(lcs_set)
+
+    # check if input and output paths are relative or absolute
+    if input_example[0] == "/":
+        input_is_absolute = True
+    else:
+        input_is_absolute = False
+    
+    if output_example[0] == "/":
+        output_is_absolute = True
+    else:
+        output_is_absolute = False
+    
+    # let's od it deflate input example
+    input_deflated = input_example.split("/")
+    input_root = os.path.join(*input_deflated[:-1])
+    if input_is_absolute:
+        input_root = "/"+input_root
+    input_suffix = "."+input_deflated[-1].split(".")[-1]
+    input_name = input_deflated[-1].split('.')[0]
+
+    output_deflated = output_example.split("/")
+    output_root = os.path.join(*output_deflated[:-1])
+    if output_is_absolute:
+        output_root = "/"+output_root
+    output_name = output_deflated[-1].split(".")[0]
+    output_suffix = "." + output_deflated[-1].split(".")[-1]
+
+    identifier = lcs(input_name, output_name)
+    mask_sep = output_name.split(identifier)[-1]
+
+    if mask_sep != "" : # if there is more info in mask add it to the suffix
+        output_suffix = mask_sep + output_suffix
+        # TODO: now investigate the directory to check for more information
+        mask_paths = glob(os.path.join(output_root, identifier + "*"))
+        if len(mask_paths) > 1: # we have more classes and attributes
+              #TODO:
+              mask_paths = list(map(lambda x: x.split("/")[-1].split(".")[0], mask_paths))
+              mask_paths = list(map(lambda x: x.split(identifier)[-1], mask_paths))
+              attribute_prefix = lcs(mask_paths[0], mask_paths[1])
+        else:
+            attribute_prefix = ""
+
+    #check if input_root or output_root are relative or absolutes
+
+    return input_root, input_suffix, output_root, output_suffix, attribute_prefix

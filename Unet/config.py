@@ -1,10 +1,15 @@
 PROJECT_ROOT = "." #TODO: add the project root directory here ...
 
-DESTINATION = "hpc"
+DESTINATION = "localhost"
+
+#TODO: Hint --> instead of image directories masks etc.
+# do provide an input and an output instance example 
+# the model will infer what is going on with the way that 
+# are organized
 
 if DESTINATION=="hpc":
-    IMAGE_PATHS = '../data/ChinaSet_AllFiles/CXR_png'
-    MASK_PATHS = '../data/mask'
+    INPUT_EXAMPLE = '../data/ChinaSet_AllFiles/CXR_png'
+    OUTPUT_EXAMPLE = '../data/mask'
     EPOCHS = 60
     BATCH_SIZE = 64
     GPU_NO = 4
@@ -12,8 +17,8 @@ if DESTINATION=="hpc":
     MULTIPROCESSING = True
     PRETRAINED_WEIGHTS = None # offer the pretrained weights path here
 else:
-    IMAGE_PATHS = '../data/train_data/ChinaSet_AllFiles/CXR_png'
-    MASK_PATHS = "../data/train_data/mask"
+    INPUT_EXAMPLE = '/Users/candrikos/python_workspace/isic_challenge_2018/task_2/ISIC2018_Task1-2_Training_Input/ISIC_0000000.jpg'
+    OUTPUT_EXAMPLE = "/Users/candrikos/python_workspace/isic_challenge_2018/task_2/ISIC2018_Task2_Training_GroundTruth_v3/ISIC_0000000_attribute_globules.png"
     EPOCHS = 4
     BATCH_SIZE = 32
     GPU_NO = 1
