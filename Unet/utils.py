@@ -4,7 +4,9 @@
 
 from keras.callbacks import EarlyStopping
 from glob import glob
-import os
+import os, numpy as np
+from keras.preprocessing import image
+from PIL import Image
 
 class meetExpectations(EarlyStopping):
     '''
@@ -39,8 +41,43 @@ class adaptLearningRate(EarlyStopping):
     #TODO: to be done
     pass
 
-def generate_paths(input_example, output_example):
+def load_image(path, target_size = (1024, 1024)):
+    '''
+        returns a np.array of the loaded image
+    '''
+    im = image.load_img(path, target_size=target_size)
+    img = image.img_to_array(im)
+    if hasattr(im, 'close'):
+            im.close()
+    return img
 
+def store_image(img, dst):
+    '''
+        stores image to dst
+    '''
+    if type(img) is not "numpy.ndarray":
+            img = np.asarray(img)
+    result = Image.fromarray(img.astype(np.uint8))
+    result.save(dst)
+
+def greyscale(x):
+    '''
+        converts rgb image to greyscale one
+    '''
+    x = x.astype(int)
+    res = (0.21 * x[:,:,:1]) + (0.72 * x[:,:,1:2]) + (0.07 * x[:,:,-1:])
+    res = res / 255
+    return res.squeeze()
+
+def generate_paths(input_example, output_example):
+    '''
+        This is a "smart" function to understand the data organization layout
+        Hint: the assumed structure is as indicated bellow
+            1. inps: <root_path>/<identifier><suffix>
+            2. outs: <root_path>/<identifier><separator><attribute><suffix>
+
+            for outs the <separator><attribute> are optional to exist
+    '''
     def lcs (S, T):
         '''
             returns the longest common substring for the given strings s, t

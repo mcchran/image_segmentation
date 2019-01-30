@@ -5,3 +5,5 @@ weights/*
 .vscode
 demos/normal_lungs.png
 demos/src
+tests
+preprocessing

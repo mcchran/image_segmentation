@@ -15,7 +15,7 @@ from utils import meetExpectations
 #import tensorflow as tf
 #run_options = tf.RunOptions(report_tensor_allocations_upon_oom = True)
 
-from config import EPOCHS, BATCH_SIZE, GPU_NO, WORKERS, MULTIPROCESSING, PRETRAINED_WEIGHTS, THRESHOLD_ACCURACY, MIN_EPOCHS, EARLY_STOPPING
+from config import EPOCHS, BATCH_SIZE, GPU_NO, WORKERS, MULTIPROCESSING, PRETRAINED_WEIGHTS, THRESHOLD_ACCURACY, MIN_EPOCHS, EARLY_STOPPING, STEPS_PER_EPOCH, VALIDATION_STEPS
 
 pretrained_weights=PRETRAINED_WEIGHTS    
 
@@ -42,13 +42,13 @@ if __name__ == "__main__":
 
     final_model.fit_generator(
         train_gen,
-        epochs=EPOCHS,
-        steps_per_epoch=50,
+        epochs = EPOCHS,
+        steps_per_epoch = STEPS_PER_EPOCH,
         validation_data = val_gen,
-        validation_steps = 4,
-        use_multiprocessing=MULTIPROCESSING,
-        workers=WORKERS,
-        max_queue_size=WORKERS,
+        validation_steps = VALIDATION_STEPS,
+        use_multiprocessing = MULTIPROCESSING,
+        workers = WORKERS,
+        max_queue_size = WORKERS,
         callbacks = callbacks
     )
 

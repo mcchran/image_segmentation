@@ -5,15 +5,17 @@
 import os
 from glob import glob
 
-import cv2 #FIXME: this should be removed die to GIL parallelizing problem
+import cv2 #FIXME: this should be removed die to GIL parallelizing problem #FIXME: this is the first one that should take place tomorrow morining
 
 import numpy as np
 from threadSafeGen import threadsafe_generator
 from math import floor, ceil
 from augmentation import augment
-from config import INPUT_EXAMPLE, OUTPUT_EXAMPLE # laod images and masks from a particular directory
+from config import INPUT_EXAMPLE, OUTPUT_EXAMPLE, MASK_PATHS # laod images and masks from a particular directory
 from skimage import exposure
 from utils import generate_paths
+
+import json # in case of loading particular mask paths from som json
 
 
 print(INPUT_EXAMPLE)
@@ -70,10 +72,16 @@ def createGens(input_example=INPUT_EXAMPLE, output_example=OUTPUT_EXAMPLE, shape
     print("-- #Image_paths: ", len(image_paths) )
     mask_paths = glob(os.path.join(output_root, "*" + output_suffix))
     print("-- #Mask_paths: ", len(mask_paths))
-    print(image_paths)
-    print(mask_paths)
     # apparently not all images have a corresponding mask so we need the intersection of those
     image_ids = list(map(lambda x: x.split('/')[-1].split(input_suffix)[0], image_paths))
+
+    if MASK_PATHS!="": # update mask paths to the dedicated ones if it is denoted ...
+        with open(MASK_PATHS, 'r') as f:
+            dedicated_mask_paths = json.load(f)
+        attribute = OUTPUT_EXAMPLE.split(output_separator)[-1].split('.')[0]
+        mask_paths = dedicated_mask_paths[attribute]
+        print(" -- However we gonna consume only ", len(mask_paths))
+        
     mask_ids = list(map(lambda x: x.split('/')[-1].split(output_suffix)[0], mask_paths))
 
     intersection = list(set(image_ids) & set(mask_ids))
