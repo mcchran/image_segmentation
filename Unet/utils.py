@@ -8,6 +8,8 @@ import os, numpy as np
 from keras.preprocessing import image
 from PIL import Image
 
+from config import DEBUG_LEVEL
+
 class meetExpectations(EarlyStopping):
     '''
         Applies an early stopping when a metric threshold is reached
@@ -68,6 +70,88 @@ def greyscale(x):
     res = (0.21 * x[:,:,:1]) + (0.72 * x[:,:,1:2]) + (0.07 * x[:,:,-1:])
     res = res / 255
     return res.squeeze()
+
+def resize_img(img, min_size=256, fill_color=(0, 0, 0)):
+    '''
+        Resizes any numpy based image to ta square one ...
+        Respects original image ratio 
+        Parameters:
+        -----------
+            im: np.ndarray typed image
+            min_size: integer
+            file_color: RGBA color to pad image
+        Returns:
+        -----------
+            new_im: np.ndarray typed image
+    '''
+    im = Image.fromarray(img.astype('uint8'))
+    im.thumbnail((min_size, min_size), Image.ANTIALIAS) #Hint: side-effects!
+    x, y = im.size
+    size = max(min_size, x, y)
+    new_im = Image.new('RGB', (size, size), fill_color)
+    new_im.paste(im, ((size - x) // 2, (size - y) // 2))
+    new_im = np.array(new_im)
+    return new_im
+
+def get_segment_crop(img, tol=0, mask=None, tile_shape = None):   
+    '''
+        corps any image based on some particular mask
+        if mask is not provided segmentation can take 
+        place using the tol threshold
+        if tile_shape is set to some shape the image shoudl
+        feature an exact manifold of that particular tile
+        
+        Params:
+        -------
+            img: np.ndarray
+            tol: int a threshold to generate an ad hoc mask
+            mask: mask as it is laoded
+            tile_shape: unit area that we need image are to be manifold of
+        
+        Returns:
+            cropped image: np.ndarray
+    '''
+    # ================ Debugging routine follows =============
+    if DEBUG_LEVEL > 1:
+        assert type(img)==np.ndarray
+        if mask:
+            assert mask.shape[0]==img.shape[0], "Image, mask rows mismatch"
+            assert mask.shape[1]==img.shape[1], "Image, mask cols mismatch"
+    # ========================================================
+    if mask is None:
+        img = greyscale(img)
+        mask = img > tol
+    else:
+        mask = greyscale(mask)
+        mask = mask > 0
+
+    if tile_shape: # that is for a potential tiling process... 
+
+        # get the only the rows and columns that mask is activated on
+        img_rows = mask.any(1)
+        img_cols = mask.any(0)
+
+        # Hint img_cols and img_rows are np.arrays of booleans 
+        num_of_missing_rows = np.where(img_rows==True)[0].shape[0] % tile_shape[0]
+        num_of_missing_cols = np.where(img_cols==True)[0].shape[0] % tile_shape[1]
+        if num_of_missing_rows > 0:
+            num_of_missing_rows = tile_shape[0] - num_of_missing_rows
+        if num_of_missing_cols > 0:
+            num_of_missing_cols = tile_shape[0] - num_of_missing_cols
+
+        # get the furthest row and column of True
+        f_row = np.where(img_rows==True)[0].max()
+        f_col = np.where(img_cols==True)[0].max()
+        for i in range(0, num_of_missing_rows+1):
+            img_rows[f_row+i] = True
+        for i in range(0, num_of_missing_cols+1):
+            img_cols[f_col+i] = True
+        
+        cropped_img = img[np.ix_(img_rows, img_cols)]
+        return cropped_img
+
+    else:
+        return img[np.ix_(mask.any(1), mask.any(0))]
 
 def generate_paths(input_example, output_example):
     '''
@@ -145,3 +229,21 @@ def generate_paths(input_example, output_example):
     #check if input_root or output_root are relative or absolutes
 
     return input_root, input_suffix, output_root, output_suffix, attribute_prefix
+
+
+def pretty_print(message, *kwords):
+    '''
+        This is a printing wrapper to enable optional
+        debugging functionality
+
+        Params:
+        -------
+        message: string, debigger message
+        multiple: other things we need to print along with the message
+
+        Returns:
+        -------
+            nothing --> just prints on the screen
+    '''
+    if DEBUG_LEVEL == 2:
+        print(message, *kwords)
